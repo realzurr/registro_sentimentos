@@ -578,7 +578,18 @@ Inclusão da informação de autoria solicitada no rodapé global da página.
 - `bun run typecheck` → 0 erros
 - `bun run test` → 134/134 pass
 
+---
 
+## 2026-08-26 15:11 — Envio do Repositório para o GitHub
 
+### Contexto
+Envio inicial do código fonte do projeto Agenda de Virtudes para o repositório remoto no GitHub.
 
+### Ações realizadas
+- Verificação de integridade: typecheck (`tsc --noEmit`), linting (`eslint .`), testes unitários/integração (`vitest run` — 134/134 testes aprovados) e testes SQLite (`scripts/teste-db.ts`).
+- Atualizado `.gitignore` para cobrir pastas de relatórios de testes (`test-results/`, `playwright-report/`, `blob-report/`) e journals SQLite.
+- Configuração do remote `origin`: `git@github.com:realzurr/agenda-virtudes.git`.
+- Criação do commit no branch `main` e push para `origin/main`.
 
+### Resultados
+- Repositório sincronizado com sucesso em `git@github.com:realzurr/agenda-virtudes.git` (branch `main`).
