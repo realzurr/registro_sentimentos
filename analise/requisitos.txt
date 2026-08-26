@@ -1,0 +1,16 @@
+Sistema de Registros das virtudes realizadas
+
+- sistema deve ter a mesma autenticação do sistema da Virtologia
+- sistema deve ter a mesma estrutura do Registro de Microdoses
+- sistema não precisa registrar quantidade de mls consumidas (não faz parte do contexto)
+- sistema precisa registrar a data e hora do registro
+- sistema precisa registrar a emoção que está ocorrendo no momento do registro
+- sistema precisa registrar sistomas que o usuário esteja passando no momento
+- sistema precisa ter um campo para descrição das ações do usuário.
+- sistema precisa registrar qual virtude foi trabalhada no dia
+- sistema precisa registrar se a prática foi em grupo ou individual
+
+- em resumo, o sistema precisa ser igual ao Sistema de registro de microdoses porém sem o registro das microdoses em ml. Será um acompanhamento do dia a dia sem o consumo da microdoses. Deve ter todo o acompanhamento e registros para posterior analise dos participantes.
+
+o sistema de Registro de Microdoses está disponivel em /home/renato/projetos/microdoses
+o sistema da Virtologia está disponivel em /home/renato/projetos/virtologia

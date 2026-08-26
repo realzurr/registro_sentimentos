@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.schema.json",
+  "mcpServers": {
+    "shadcn-ui": {
+      "command": "npx",
+      "args": ["@jpisnice/shadcn-ui-mcp-server@latest"],
+      "env": {}
+    }
+  },
+  "rules": [
+    ".opencode/rules/project-rules.md"
+  ],
+  "skills": [
+    ".opencode/skills/tdd-workflow.md",
+    ".opencode/skills/security-review.md",
+    ".opencode/skills/react-best-practices.md"
+  ]
+}
