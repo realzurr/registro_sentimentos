@@ -22,4 +22,5 @@ pnpm-lock.yaml
 *.key
 .vercel
 .netlify
+.opencode/
 
