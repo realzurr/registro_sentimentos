@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 const links = [
   { to: "/", label: "Registro do dia" },
   { to: "/meus-registros", label: "Meus registros" },
+  { to: "/dashboard", label: "Meu Dashboard" },
 ];
 
 export function SiteHeader() {
@@ -48,6 +49,18 @@ export function SiteHeader() {
                 {l.label}
               </Link>
             ))}
+          {user && (
+            <Link
+              to="/admin"
+              className={`rounded-full px-3 py-1.5 text-sm transition ${
+                location.pathname === "/admin"
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Painel admin
+            </Link>
+          )}
           {user ? (
             <Button variant="outline" size="sm" onClick={handleSignOut} className="ml-2 gap-1.5">
               <LogOut className="h-3.5 w-3.5" />

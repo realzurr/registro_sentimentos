@@ -22,10 +22,10 @@ painel admin e exportação CSV).
 
 ## 2. Referências locais verificadas (somente leitura — NUNCA modificar)
 
-| Projeto | Caminho | O que extrair |
-|---|---|---|
-| Registro de Microdoses | `/home/renato/projetos/microdoses` | Modelo de dados/fluxo e **banco local**: `server_ok.py` (rotas, `init_db`/`ensure_column` para criar/migrar o SQLite na inicialização, regra de edição de 5 min `_pode_modificar`, export CSV), templates em `templates/` (index, meus-registros, dashboard, painel_admin, error) |
-| Virtologia | `/home/renato/projetos/virtologia` | Autenticação e stack: `src/lib/supabase/{client,server,server-fn}.ts`, `src/lib/auth.ts`, `src/components/{auth-provider,protected-route,admin-route}.tsx`, `src/routes/{login,auth.callback,__root}.tsx`, `src/lib/virtues.ts` (lista de virtudes), config raiz (vite/tsconfig/eslint/tailwind/shadcn) |
+| Projeto                | Caminho                            | O que extrair                                                                                                                                                                                                                                                                                           |
+| ---------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registro de Microdoses | `/home/renato/projetos/microdoses` | Modelo de dados/fluxo e **banco local**: `server_ok.py` (rotas, `init_db`/`ensure_column` para criar/migrar o SQLite na inicialização, regra de edição de 5 min `_pode_modificar`, export CSV), templates em `templates/` (index, meus-registros, dashboard, painel_admin, error)                       |
+| Virtologia             | `/home/renato/projetos/virtologia` | Autenticação e stack: `src/lib/supabase/{client,server,server-fn}.ts`, `src/lib/auth.ts`, `src/components/{auth-provider,protected-route,admin-route}.tsx`, `src/routes/{login,auth.callback,__root}.tsx`, `src/lib/virtues.ts` (lista de virtudes), config raiz (vite/tsconfig/eslint/tailwind/shadcn) |
 
 Stack da Virtologia (a replicar): TanStack Start, React 19, Vite 7, Tailwind 4,
 shadcn/Radix, TypeScript, zod, Bun como gerenciador de pacotes.
@@ -68,27 +68,27 @@ da aplicação, sem passo manual. Duas tabelas:
 
 **`registros_virtudes`**
 
-| Campo | Tipo SQLite | Regras |
-|---|---|---|
-| `id` | INTEGER PK AUTOINCREMENT | |
-| `user_id` | TEXT NOT NULL | uuid do usuário Supabase (sem FK — auth é externa) |
-| `data_registro` | TEXT NOT NULL | ISO `YYYY-MM-DDTHH:mm` (ou `YYYY-MM-DD`); data e hora em que a prática/evento foi realizada |
-| `criado_em` | TEXT NOT NULL | ISO datetime; data+hora do registro (requisito) |
-| `atualizado_em` | TEXT | atualizado a cada edição |
-| `virtude` | TEXT NOT NULL | valor da lista de virtudes da Virtologia |
-| `modalidade` | TEXT NOT NULL | `grupo` ou `individual` (CHECK constraint) |
-| `emocao_atual` | TEXT NOT NULL | emoção no momento do registro |
-| `sintomas_atuais` | TEXT | sintomas do momento (opcional) |
-| `descricao_acoes` | TEXT NOT NULL | descrição livre das ações/percepções |
+| Campo             | Tipo SQLite              | Regras                                                                                      |
+| ----------------- | ------------------------ | ------------------------------------------------------------------------------------------- |
+| `id`              | INTEGER PK AUTOINCREMENT |                                                                                             |
+| `user_id`         | TEXT NOT NULL            | uuid do usuário Supabase (sem FK — auth é externa)                                          |
+| `data_registro`   | TEXT NOT NULL            | ISO `YYYY-MM-DDTHH:mm` (ou `YYYY-MM-DD`); data e hora em que a prática/evento foi realizada |
+| `criado_em`       | TEXT NOT NULL            | ISO datetime; data+hora do registro (requisito)                                             |
+| `atualizado_em`   | TEXT                     | atualizado a cada edição                                                                    |
+| `virtude`         | TEXT NOT NULL            | valor da lista de virtudes da Virtologia                                                    |
+| `modalidade`      | TEXT NOT NULL            | `grupo` ou `individual` (CHECK constraint)                                                  |
+| `emocao_atual`    | TEXT NOT NULL            | emoção no momento do registro                                                               |
+| `sintomas_atuais` | TEXT                     | sintomas do momento (opcional)                                                              |
+| `descricao_acoes` | TEXT NOT NULL            | descrição livre das ações/percepções                                                        |
 
 Índices: `user_id` e `data_registro`.
 
 **`papeis`**
 
-| Campo | Tipo SQLite | Regras |
-|---|---|---|
-| `user_id` | TEXT PK | uuid do usuário Supabase |
-| `role` | TEXT NOT NULL | `admin` ou `user`; semeada com o admin inicial por env |
+| Campo     | Tipo SQLite   | Regras                                                 |
+| --------- | ------------- | ------------------------------------------------------ |
+| `user_id` | TEXT PK       | uuid do usuário Supabase                               |
+| `role`    | TEXT NOT NULL | `admin` ou `user`; semeada com o admin inicial por env |
 
 Correspondência com `registros` do microdoses: `user`→`user_id`; `date`→`data_registro`;
 `emocao_atual`←`emotions`; `sintomas_atuais`←`conditions`; `descricao_acoes`←`comentario_livre`;
@@ -106,14 +106,14 @@ sem quebrar o banco existente dos usuários.
 
 ## 5. Telas e rotas (mapa microdoses → agenda)
 
-| Microdoses (referência) | Agenda (rota) | Conteúdo |
-|---|---|---|
-| `/` + `index.html` | `/` (protegida) | Formulário do registro do dia: virtude, modalidade, emoção, sintomas, descrição; data/hora automáticas; botão salvar → server fn insert |
-| `/meus-registros` | `/meus-registros` (protegida) | Lista dos próprios registros; editar/excluir somente dentro da janela de 5 min |
-| `/dashboard`, `/dashboard-emocoes` | `/acompanhamento` (protegida) | Resumo simplestico do próprio histórico (fase opcional, após núcleo) |
-| `/painel-admin` + `/registros` | `/admin` (guard admin) | Todos os registros, filtros por período/participante, export CSV |
-| `/exportar-csv` | ação em `/admin` | Export CSV dos registros filtrados |
-| `/login`, `/cadastro`, `/logout` | `/login`, `/auth/callback`, logout no menu | Auth Supabase copiada da Virtologia (sem tela de cadastro: contas vêm da Virtologia) |
+| Microdoses (referência)            | Agenda (rota)                              | Conteúdo                                                                                                                                |
+| ---------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `/` + `index.html`                 | `/` (protegida)                            | Formulário do registro do dia: virtude, modalidade, emoção, sintomas, descrição; data/hora automáticas; botão salvar → server fn insert |
+| `/meus-registros`                  | `/meus-registros` (protegida)              | Lista dos próprios registros; editar/excluir somente dentro da janela de 5 min                                                          |
+| `/dashboard`, `/dashboard-emocoes` | `/acompanhamento` (protegida)              | Resumo simplestico do próprio histórico (fase opcional, após núcleo)                                                                    |
+| `/painel-admin` + `/registros`     | `/admin` (guard admin)                     | Todos os registros, filtros por período/participante, export CSV                                                                        |
+| `/exportar-csv`                    | ação em `/admin`                           | Export CSV dos registros filtrados                                                                                                      |
+| `/login`, `/cadastro`, `/logout`   | `/login`, `/auth/callback`, logout no menu | Auth Supabase copiada da Virtologia (sem tela de cadastro: contas vêm da Virtologia)                                                    |
 
 ---
 
@@ -130,6 +130,7 @@ sem quebrar o banco existente dos usuários.
 ## 7. Plano de execução (fases sequenciais, cada uma com aceite verificável)
 
 ### Fase 0 — Fundações
+
 - Criar projeto TanStack Start na raiz, copiando da Virtologia: `vite.config.ts`,
   `tsconfig.json`, `eslint.config.js`, `components.json`, `.prettierrc`, `src/styles.css`,
   componentes shadcn necessários (`src/components/ui/*`) — sem código de domínio.
@@ -138,6 +139,7 @@ sem quebrar o banco existente dos usuários.
 - **Aceite**: `bun install && bun run dev` sobe a app; `bun run lint` sem erros.
 
 ### Fase 1 — Autenticação (cópia fiel da Virtologia)
+
 - Copiar `src/lib/auth.ts`, `src/lib/supabase/{client,server,server-fn}.ts` (sem `admin.ts`
   — service role não será usada), `src/components/{auth-provider,protected-route,admin-route}.tsx`,
   rotas `login.tsx` e `auth.callback.tsx`; montar `__root.tsx` com AuthProvider.
@@ -150,6 +152,7 @@ sem quebrar o banco existente dos usuários.
   sessão redireciona para `/login`; erros de login exibidos em PT-BR (errorMap do AuthProvider).
 
 ### Fase 2 — Banco de dados local
+
 - Implementar módulo de acesso ao SQLite (ex. `better-sqlite3`) com `init_db()` executado na
   inicialização do servidor: cria `virtudes.db`, tabelas `registros_virtudes` e `papeis`,
   índices, CHECK de `modalidade` e seed do admin inicial conforme Seção 4.
@@ -157,24 +160,28 @@ sem quebrar o banco existente dos usuários.
   duplica nem apaga dados; arquivo listado no `.gitignore`.
 
 ### Fase 3 — Registro do dia (`/`)
+
 - Formulário com validação zod; server function de insert usando o `user_id` do token validado;
   `data_registro` = hoje (editável), `criado_em` automático no servidor.
 - **Aceite**: salvar grava linha com `user_id` correto; campos obrigatórios bloqueiam envio;
   mensagem de sucesso/erro em PT-BR.
 
 ### Fase 4 — Meus registros
+
 - Listagem ordenada por data desc; editar/excluir via server fns que recusam operações fora
   da janela de 5 min (`criado_em`/`atualizado_em`) e filtram sempre pelo `user_id` do token.
 - **Aceite**: usuário A não enxerga nem altera registros de B (filtro por token validado,
   testado com 2 contas); edição além de 5 min retorna erro amigável.
 
 ### Fase 5 — Painel admin + CSV
+
 - Guard `AdminRoute` + server fn que valida token e confere `role='admin'` na tabela local
   `papeis`; tabela de todos os registros com filtros (período, participante, virtude,
   modalidade); export CSV.
 - **Aceite**: não-admin recebe negação; admin lista tudo; CSV baixa com todas as colunas.
 
 ### Fase 6 — Qualidade e encerramento
+
 - `bun run lint`, checagem de tipos e `bun run build` passando; revisão de textos em PT-BR;
   README mínimo (como rodar, variáveis de ambiente); atualização deste plano se decisões mudarem.
 - **Aceite global**: busca por "dose"/"ml" no código não retorna resíduos de domínio;

@@ -46,10 +46,10 @@ EOF
 
   info "Arquivo .env atualizado em ${ENV_FILE}"
   echo ""
-  echo "  Valores configurados:"
-  echo "    VITE_SUPABASE_URL:      ${SUPABASE_URL}"
-  echo "    VITE_SUPABASE_ANON_KEY: ${SUPABASE_KEY:0:20}..."
-  echo "    VITE_INITIAL_ADMIN_EMAIL: ${ADMIN_EMAIL}"
+  echo "  Variáveis configuradas:"
+  echo "    VITE_SUPABASE_URL:          OK"
+  echo "    VITE_SUPABASE_ANON_KEY:     OK (não exibida por segurança)"
+  echo "    VITE_INITIAL_ADMIN_EMAIL:   OK"
   echo ""
 
 elif [[ -f .env ]]; then

@@ -41,3 +41,12 @@ export const virtudes: VirtudeOpcao[] = [
 export function nomeVirtude(slug: string): string {
   return virtudes.find((v) => v.slug === slug)?.nome ?? slug;
 }
+
+export function embaralharVirtudes(): VirtudeOpcao[] {
+  const lista = [...virtudes];
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  return lista;
+}

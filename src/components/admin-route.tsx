@@ -7,15 +7,11 @@ import { checkIsAdmin } from "@/lib/api/admin-users.server";
 import { Button } from "@/components/ui/button";
 
 export function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading, getToken } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const { data: isAdmin, isLoading } = useQuery({
     queryKey: ["isAdmin", user?.id],
-    queryFn: async () => {
-      const token = await getToken();
-      if (!token) return false;
-      return checkIsAdmin({ data: { token } });
-    },
+    queryFn: async () => checkIsAdmin(),
     enabled: !!user,
     staleTime: 60_000,
   });

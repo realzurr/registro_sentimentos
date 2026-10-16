@@ -59,6 +59,7 @@ sudo ./scripts/setup-server.sh
 ```
 
 Este script:
+
 1. Cria o diretório de dados `/var/lib/agenda/`
 2. Copia o `.env` para `/var/lib/agenda/.env`
 3. Configura o firewall UFW (abre portas 22, 80, 443)

@@ -13,7 +13,6 @@ export interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (data: SignUpData) => Promise<{ error?: string; message?: string }>;
   signOut: () => Promise<void>;
-  getToken: () => Promise<string | null>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

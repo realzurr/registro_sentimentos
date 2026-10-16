@@ -47,6 +47,15 @@ export const emocoes: Emocao[] = [
 
 export const nomesEmocoes = emocoes.map((e) => e.nome);
 
+export function embaralharEmocoes(): Emocao[] {
+  const lista = [...emocoes];
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  return lista;
+}
+
 export function slugParaNomeEmocao(slug: string): string {
   return emocoes.find((e) => e.slug === slug)?.nome ?? slug;
 }

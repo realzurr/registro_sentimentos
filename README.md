@@ -6,17 +6,17 @@ Sistema de registros diários de virtudes praticadas — tracking de virtudes pa
 
 - **Frontend/Server**: TanStack Start + React 19 + Vite 7 + Tailwind 4
 - **UI**: shadcn/ui (Radix Primitives)
-- **Auth**: Supabase (apenas autenticação)
+- **Auth**: Supabase (apenas autenticação), com sessão gerenciada por cookies httpOnly
 - **Banco**: SQLite local (`node:sqlite`, `DatabaseSync`)
 - **Runtime**: Node.js 20+ / Bun 1.4+
 - **Deploy**: Nitro (`node-server` preset) + systemd + nginx
 
 ## Pré-requisitos
 
-| Ferramenta | Versão mínima | Instalação |
-|---|---|---|
-| Bun | 1.4+ | `curl -fsSL https://bun.sh/install \| bash` |
-| Node.js | 20+ | Via script de setup ou `nvm` |
+| Ferramenta | Versão mínima | Instalação                                  |
+| ---------- | ------------- | ------------------------------------------- |
+| Bun        | 1.4+          | `curl -fsSL https://bun.sh/install \| bash` |
+| Node.js    | 20+           | Via script de setup ou `nvm`                |
 
 ## Setup local
 
@@ -40,11 +40,12 @@ O servidor de desenvolvimento inicia em **http://localhost:5003**.
 
 ## Variáveis de ambiente
 
-| Variável | Descrição | Onde usar |
-|---|---|---|
-| `VITE_SUPABASE_URL` | URL do projeto Supabase | `.env` |
-| `VITE_SUPABASE_ANON_KEY` | Chave pública/anon do Supabase | `.env` |
-| `VITE_INITIAL_ADMIN_EMAIL` | Email que recebe papel admin automaticamente | `.env` |
+| Variável                   | Descrição                                        | Onde usar |
+| -------------------------- | ------------------------------------------------ | --------- |
+| `VITE_SUPABASE_URL`        | URL do projeto Supabase                          | `.env`    |
+| `VITE_SUPABASE_ANON_KEY`   | Chave pública/anon do Supabase                   | `.env`    |
+| `VITE_INITIAL_ADMIN_EMAIL` | Email que recebe papel admin automaticamente     | `.env`    |
+| `OPENAI_API_KEY`           | Chave da OpenAI (usada na "Análise Inteligente") | `.env`    |
 
 Exemplo de `.env`:
 
@@ -52,23 +53,29 @@ Exemplo de `.env`:
 VITE_SUPABASE_URL=https://seu-projeto.supabase.co
 VITE_SUPABASE_ANON_KEY=sb_publishable_xxxxx
 VITE_INITIAL_ADMIN_EMAIL=admin@email.com
+OPENAI_API_KEY=sk-xxxxx
 ```
 
-> As 3 variáveis usam prefixo `VITE_` e são expostas ao bundle do browser (client-side). Não coloque chaves secretas aqui — o Supabase neste projeto é auth-only; todos os dados ficam em SQLite local.
+> As variáveis com prefixo `VITE_*` são expostas ao bundle do browser (client-side). **Não coloque chaves secretas nelas** — o Supabase neste projeto é auth-only; todos os dados ficam em SQLite local. A `OPENAI_API_KEY` é usada apenas no servidor.
 
 ## Comandos disponíveis
 
-| Comando | Descrição |
-|---|---|
-| `bun run dev` | Servidor de desenvolvimento (porta 5003) |
-| `bun run build` | Build de produção (saída em `.output/`) |
-| `bun run preview` | Visualizar build de produção |
-| `bun run lint` | ESLint + Prettier |
-| `bun run typecheck` | TypeScript (noEmit) |
-| `bun run test` | Vitest (unit + integration) |
-| `bun run test:e2e` | Playwright (E2E) |
-| `bun run test:watch` | Vitest em modo watch |
-| `bun run test:coverage` | Vitest com coverage (v8) |
+| Comando                   | Descrição                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `bun run dev`             | Servidor de desenvolvimento (porta 5003)                                       |
+| `bun run build`           | Build de produção (saída em `.output/`)                                        |
+| `bun run preview`         | Visualizar build de produção                                                   |
+| `bun run lint`            | ESLint                                                                         |
+| `bun run format`          | Prettier write                                                                 |
+| `bun run typecheck`       | TypeScript (`tsc --noEmit`)                                                    |
+| `bun run test`            | Vitest: unit + integration (`tests/**/*.test.ts`)                              |
+| `bun run test:watch`      | Vitest em modo watch                                                           |
+| `bun run test:coverage`   | Vitest com coverage (v8)                                                       |
+| `bun run test:e2e`        | Playwright E2E (`tests/e2e/`, espera dev server na porta 5003)                 |
+| `bun run test:e2e:ui`     | Playwright UI mode                                                             |
+| `bun scripts/teste-db.ts` | Smoke test standalone do SQLite (apaga `virtudes.db` do diretório de trabalho) |
+
+Ordem de verificação quando necessário: `lint → typecheck → test`.
 
 ## Estrutura do projeto
 
@@ -81,35 +88,44 @@ agenda-virtudes/
 │   │   ├── site-chrome.tsx  # Layout shell (nav + menu)
 │   │   ├── auth-provider.tsx
 │   │   ├── protected-route.tsx
-│   │   └── error-boundary.tsx
+│   │   ├── admin-route.tsx
+│   │   ├── error-boundary.tsx
+│   │   ├── grafico-perfil.tsx
+│   │   └── graficos-dashboard.tsx
 │   ├── lib/
 │   │   ├── api/             # Server functions (TanStack)
 │   │   │   ├── registros.server.ts
 │   │   │   ├── admin.server.ts
-│   │   │   └── admin-users.server.ts
+│   │   │   ├── admin-users.server.ts
+│   │   │   ├── dashboard.server.ts
+│   │   │   └── openai-analise.server.ts
 │   │   ├── supabase/        # Clientes Supabase
 │   │   │   ├── client.ts    # Browser client
-│   │   │   └── server.ts    # Server client
+│   │   │   ├── server.ts    # Server client (cookies httpOnly)
+│   │   │   └── server-fn.ts # Helper de auth para server functions
 │   │   ├── db.server.ts     # SQLite CRUD (server-only)
 │   │   ├── csv.ts           # Exportação CSV
 │   │   ├── format.ts        # Formatação (datas, texto)
 │   │   ├── date.ts          # Utilitários de data
 │   │   ├── admin-email.ts   # Verificação de admin
-│   │   ├── auth.ts          # Auth helpers
+│   │   ├── auth.ts          # Auth context types
 │   │   ├── constants.ts     # Constantes (janela de edição)
+│   │   ├── emotions-list.ts # Lista de emoções
+│   │   ├── symptoms-list.ts # Lista de sintomas
 │   │   └── virtues-list.ts  # Lista das 32 virtudes
 │   ├── routes/
 │   │   ├── __root.tsx       # Root layout
 │   │   ├── index.tsx        # Formulário de registro
 │   │   ├── login.tsx        # Página de login
 │   │   ├── meus-registros.tsx  # Lista de registros do usuário
+│   │   ├── dashboard.tsx    # Dashboard pessoal + Análise Inteligente
 │   │   ├── admin.tsx        # Painel administrativo
 │   │   └── auth.callback.tsx   # Callback do Supabase
 │   └── server.ts            # Entry point do Nitro
 ├── tests/
-│   ├── unit/                # 7 arquivos de teste unitário
-│   ├── integration/         # 3 arquivos de teste de integração
-│   ├── e2e/                 # 1 arquivo Playwright (5 testes)
+│   ├── unit/                # Testes unitários
+│   ├── integration/         # Testes de integração
+│   ├── e2e/                 # Testes Playwright
 │   ├── fixtures/            # Dados de teste
 │   ├── helpers/             # Setup e mocks
 │   └── config/              # Configuração de testes
@@ -132,6 +148,7 @@ agenda-virtudes/
 ### Visão geral
 
 O deploy usa:
+
 - **Nitro** (`node-server` preset) para o build de produção
 - **systemd** para gerenciar o processo Node.js
 - **nginx** como reverse proxy (SSL, cache de assets)
@@ -163,13 +180,13 @@ Leia o guia completo em `scripts/SETUP.md`.
 
 Resumo dos scripts:
 
-| Script | Quando usar | O que faz |
-|---|---|---|
-| `scripts/setup-server.sh` | 1ª vez no servidor | Instala Node, Bun, nginx, certbot, firewall UFW, cria usuário `deploy` |
-| `scripts/env.sh` | 1ª vez ou atualizar vars | Configura variáveis de ambiente no `/var/lib/agenda/.env` |
-| `scripts/deploy.sh` | Toda atualização | Build de produção, copia para `/var/lib/agenda/`, reinicia serviço |
-| `scripts/backup.sh` | Cron diário | Faz backup do `virtudes.db` para `/var/backups/agenda/` |
-| `scripts/update.sh` | Atualização rápida | Pull + deploy (atalho para git pull + deploy.sh) |
+| Script                    | Quando usar              | O que faz                                                              |
+| ------------------------- | ------------------------ | ---------------------------------------------------------------------- |
+| `scripts/setup-server.sh` | 1ª vez no servidor       | Instala Node, Bun, nginx, certbot, firewall UFW, cria usuário `deploy` |
+| `scripts/env.sh`          | 1ª vez ou atualizar vars | Configura variáveis de ambiente no `/var/lib/agenda/.env`              |
+| `scripts/deploy.sh`       | Toda atualização         | Build de produção, copia para `/var/lib/agenda/`, reinicia serviço     |
+| `scripts/backup.sh`       | Cron diário              | Faz backup do `virtudes.db` para `/var/backups/agenda/`                |
+| `scripts/update.sh`       | Atualização rápida       | Pull + deploy (atalho para git pull + deploy.sh)                       |
 
 ### Diretórios no servidor
 
@@ -210,10 +227,17 @@ sudo certbot certificates
 
 ## Arquitetura
 
-- **Auth via Supabase**: OAuth/.magic-link via Supabase (mesmo projeto da Virtologia). Só auth — nenhum dado de aplicação vai para o Supabase.
+- **Auth via Supabase**: OAuth/magic-link via Supabase (mesmo projeto da Virtologia). Só auth — nenhum dado de aplicação vai para o Supabase. A sessão é mantida em cookies httpOnly (`sb-access-token`/`sb-refresh-token`) e validada no servidor; o access_token **não** trafega como parâmetro das server functions.
 - **Dados locais em SQLite**: Tudo fica em `virtudes.db` no servidor. Criado automaticamente no 1º acesso.
 - **Janela de edição de 5 minutos**: Registros só podem ser editados/excluídos nos primeiros 5 minutos após criação.
 - **Papel admin local**: Tabela `papeis` no SQLite. O email definido em `VITE_INITIAL_ADMIN_EMAIL` recebe papel admin automaticamente.
+- **Análise Inteligente**: Geração de análise textual via OpenAI, usando `OPENAI_API_KEY` apenas no servidor.
+
+## Segurança
+
+- Nunca commite o arquivo `.env`; ele já está listado no `.gitignore`.
+- Não exponha `OPENAI_API_KEY` no cliente; ela é usada apenas em server functions.
+- O token de sessão do Supabase é lido do cookie no servidor, não enviado pelo browser nas chamadas de API.
 
 ## Referências
 

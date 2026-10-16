@@ -13,7 +13,7 @@ import {
   excluirRegistro,
   registroSchema,
 } from "@/lib/api/registros.server";
-import { nomeVirtude, virtudes } from "@/lib/virtues-list";
+import { embaralharVirtudes, nomeVirtude } from "@/lib/virtues-list";
 import { slugParaNomeEmocao } from "@/lib/emotions-list";
 import { formatarDataPtBr } from "@/lib/format";
 import { paraInputDatetimeLocal } from "@/lib/date";
@@ -63,8 +63,8 @@ function FormularioEdicao({
   onSalvo: () => void;
   onCancelar: () => void;
 }) {
-  const { getToken } = useAuth();
   const firstFieldRef = useRef<HTMLInputElement>(null);
+  const [virtudesOpcoes] = useState(() => embaralharVirtudes());
   const [dataRegistro, setDataRegistro] = useState(() =>
     paraInputDatetimeLocal(registro.data_registro),
   );
@@ -85,12 +85,6 @@ function FormularioEdicao({
     async (e: React.FormEvent) => {
       e.preventDefault();
       setErros({});
-
-      const token = await getToken();
-      if (!token) {
-        toast.error("Sessão expirada. Faça login novamente.");
-        return;
-      }
 
       const parsed = registroSchema.safeParse({
         data_registro: dataRegistro,
@@ -114,7 +108,6 @@ function FormularioEdicao({
       setSalvando(true);
       const result = await atualizarRegistro({
         data: {
-          token,
           id: registro.id,
           campos: parsed.data,
         },
@@ -129,17 +122,7 @@ function FormularioEdicao({
       toast.success("Registro atualizado com sucesso!");
       onSalvo();
     },
-    [
-      getToken,
-      registro.id,
-      dataRegistro,
-      virtude,
-      modalidade,
-      emocao,
-      sintomas,
-      descricao,
-      onSalvo,
-    ],
+    [registro.id, dataRegistro, virtude, modalidade, emocao, sintomas, descricao, onSalvo],
   );
 
   return (
@@ -165,7 +148,7 @@ function FormularioEdicao({
               <SelectValue placeholder="Selecione a virtude" />
             </SelectTrigger>
             <SelectContent>
-              {virtudes.map((v) => (
+              {virtudesOpcoes.map((v) => (
                 <SelectItem key={v.slug} value={v.slug}>
                   {v.nome}
                 </SelectItem>
@@ -258,7 +241,7 @@ function CardSkeleton() {
 }
 
 function MeusRegistrosConteudo() {
-  const { getToken, user } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
@@ -272,11 +255,7 @@ function MeusRegistrosConteudo() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["meus-registros", user?.id],
-    queryFn: async () => {
-      const token = await getToken();
-      if (!token) return { ok: false as const, erro: "Não autenticado." };
-      return meusRegistros({ data: { token } });
-    },
+    queryFn: async () => meusRegistros(),
     enabled: !!user,
   });
 
@@ -284,14 +263,8 @@ function MeusRegistrosConteudo() {
 
   const handleExcluir = useCallback(
     async (id: number) => {
-      const token = await getToken();
-      if (!token) {
-        toast.error("Sessão expirada. Faça login novamente.");
-        return;
-      }
-
       setExcluindoId(id);
-      const result = await excluirRegistro({ data: { token, id } });
+      const result = await excluirRegistro({ data: { id } });
       setExcluindoId(null);
 
       if (result.ok) {
@@ -301,7 +274,7 @@ function MeusRegistrosConteudo() {
         toast.error(result.erro ?? "Erro ao excluir registro.");
       }
     },
-    [getToken, queryClient],
+    [queryClient],
   );
 
   if (isLoading) {

@@ -7,8 +7,8 @@ APP_NAME="agenda"
 APP_USER="deploy"
 APP_DIR="/home/${APP_USER}/agenda-virtudes"
 DATA_DIR="/var/lib/${APP_NAME}"
-PORT=3000
-NODE_VERSION="20"
+PORT=5003
+NODE_VERSION="22"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -21,12 +21,6 @@ error() { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 
 if [[ $EUID -ne 0 ]]; then
   error "Execute como root: sudo ./scripts/setup-server.sh"
-fi
-
-if ! command -v bun &>/dev/null; then
-  warn "Bun não encontrado. Instalando..."
-  sudo -u "$APP_USER" bash -c 'curl -fsSL https://bun.sh/install | bash'
-  export PATH="/home/${APP_USER}/.bun/bin:$PATH"
 fi
 
 info "=== Setup do servidor — ${APP_NAME} ==="
@@ -160,8 +154,8 @@ if [[ ! -f .env ]]; then
   cp "${DATA_DIR}/.env" .env
 fi
 
-bun install
-bun run build
+npm install
+npm run build
 
 # Copiar build para o diretório de dados
 mkdir -p "${DATA_DIR}/current"

@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AdminRoute } from "@/components/admin-route";
-import { exportarCsvAdmin, listarTodosAdmin } from "@/lib/api/admin.server";
+import { exportarCsvAdmin, listarTodosAdmin, perfilComparativoAdmin } from "@/lib/api/admin.server";
+import { GraficoPerfil } from "@/components/grafico-perfil";
 import { nomeVirtude } from "@/lib/virtues-list";
 import { slugParaNomeEmocao } from "@/lib/emotions-list";
 import { slugParaNomeSintoma } from "@/lib/symptoms-list";
@@ -15,8 +16,15 @@ import { parseEmocoes, parseSintomas } from "@/lib/parse-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -34,7 +42,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 function PainelAdminConteudo() {
-  const { getToken, user } = useAuth();
+  const { user } = useAuth();
   const [filtroDe, setFiltroDe] = useState("");
   const [filtroAte, setFiltroAte] = useState("");
   const [filtrosAtivos, setFiltrosAtivos] = useState<{ de: string; ate: string }>({
@@ -42,22 +50,26 @@ function PainelAdminConteudo() {
     ate: "",
   });
   const [exportando, setExportando] = useState(false);
+  const [usuarioPerfil, setUsuarioPerfil] = useState<string>("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-registros", user?.id, filtrosAtivos.de, filtrosAtivos.ate],
-    queryFn: async () => {
-      const token = await getToken();
-      if (!token) {
-        return { ok: false as const, erro: "Não autenticado." };
-      }
-      return listarTodosAdmin({
+    queryFn: async () =>
+      listarTodosAdmin({
         data: {
-          token,
           de: filtrosAtivos.de || undefined,
           ate: filtrosAtivos.ate || undefined,
         },
-      });
-    },
+      }),
+    enabled: !!user,
+  });
+
+  const { data: perfil, isLoading: perfilCarregando } = useQuery({
+    queryKey: ["perfil-comparativo", user?.id, usuarioPerfil],
+    queryFn: async () =>
+      perfilComparativoAdmin({
+        data: { userId: usuarioPerfil || null },
+      }),
     enabled: !!user,
   });
 
@@ -73,17 +85,10 @@ function PainelAdminConteudo() {
   }
 
   async function handleExportarCsv() {
-    const token = await getToken();
-    if (!token) {
-      toast.error("Sessão expirada. Faça login novamente.");
-      return;
-    }
-
     setExportando(true);
     try {
       const result = await exportarCsvAdmin({
         data: {
-          token,
           de: filtrosAtivos.de || undefined,
           ate: filtrosAtivos.ate || undefined,
         },
@@ -189,6 +194,60 @@ function PainelAdminConteudo() {
         </CardContent>
       </Card>
 
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Perfil de emoções — usuário vs grupo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {perfilCarregando ? (
+            <div className="flex h-[300px] items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : perfil && perfil.ok ? (
+            <>
+              <div className="max-w-xs">
+                <Label>Selecione o usuário</Label>
+                <Select
+                  value={usuarioPerfil || perfil.usuarioSelecionado || ""}
+                  onValueChange={setUsuarioPerfil}
+                >
+                  <SelectTrigger className="mt-2 w-full">
+                    <SelectValue placeholder="Selecione o usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {perfil.usuarios.map((u) => (
+                      <SelectItem key={u.user_id} value={u.user_id}>
+                        {u.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {perfil.usuarios.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum registro disponível para gerar o perfil.
+                </p>
+              ) : (
+                <GraficoPerfil
+                  rotulos={perfil.rotulos}
+                  usuario={perfil.usuario}
+                  grupo={perfil.grupo}
+                  nomeUsuario={
+                    perfil.usuarios.find(
+                      (u) => u.user_id === (usuarioPerfil || perfil.usuarioSelecionado),
+                    )?.nome ?? "Usuário"
+                  }
+                />
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-red-500">
+              {perfil?.erro ?? "Não foi possível carregar o perfil."}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">
           {registros.length} registro(s) encontrado(s)
@@ -239,10 +298,10 @@ function PainelAdminConteudo() {
                     {truncarTexto(registro.descricao_acoes, 80)}
                   </TableCell>
                   <TableCell
-                    className="whitespace-nowrap font-mono text-xs text-muted-foreground"
-                    title={registro.user_id}
+                    className="whitespace-nowrap font-medium text-foreground"
+                    title={registro.user_email ?? registro.user_id}
                   >
-                    {truncarUserId(registro.user_id)}
+                    {registro.user_name ?? registro.user_email ?? truncarUserId(registro.user_id)}
                   </TableCell>
                 </TableRow>
               ))}

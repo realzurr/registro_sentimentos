@@ -1,12 +1,18 @@
 import { DatabaseSync } from "node:sqlite";
 import path from "node:path";
+import { existsSync, mkdirSync } from "node:fs";
 import { JANELA_EDICAO_MS } from "./constants";
 
 let dbInstance: DatabaseSync | null = null;
 
 export function getDb(): DatabaseSync {
   if (!dbInstance) {
-    dbInstance = new DatabaseSync(path.join(process.cwd(), "virtudes.db"));
+    const dbPath = process.env.SQLITE_DB_PATH ?? path.join(process.cwd(), "virtudes.db");
+    const dir = path.dirname(dbPath);
+    if (dir !== "." && !existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    dbInstance = new DatabaseSync(dbPath);
     dbInstance.exec("PRAGMA journal_mode = WAL;");
     initDb(dbInstance);
   }
@@ -25,6 +31,8 @@ export function initDb(conn: DatabaseSync) {
     CREATE TABLE IF NOT EXISTS registros_virtudes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,
+      user_name TEXT,
+      user_email TEXT,
       data_registro TEXT NOT NULL,
       criado_em TEXT NOT NULL,
       atualizado_em TEXT,
@@ -42,11 +50,26 @@ export function initDb(conn: DatabaseSync) {
       role TEXT NOT NULL CHECK (role IN ('admin', 'user'))
     );
   `);
+
+  const cols = conn.prepare(`PRAGMA table_info(registros_virtudes)`).all() as {
+    name: string;
+  }[];
+  const names = new Set(cols.map((c) => c.name));
+  for (const col of [
+    ["user_name", "TEXT"],
+    ["user_email", "TEXT"],
+  ] as const) {
+    if (!names.has(col[0])) {
+      conn.exec(`ALTER TABLE registros_virtudes ADD COLUMN ${col[0]} ${col[1]}`);
+    }
+  }
 }
 
 export interface RegistroVirtude {
   id: number;
   user_id: string;
+  user_name: string | null;
+  user_email: string | null;
   data_registro: string;
   criado_em: string;
   atualizado_em: string | null;
@@ -59,6 +82,8 @@ export interface RegistroVirtude {
 
 export interface NovoRegistro {
   user_id: string;
+  user_name?: string | null;
+  user_email?: string | null;
   data_registro: string;
   virtude: string;
   modalidade: "grupo" | "individual";
@@ -85,11 +110,13 @@ export function createRegistro(dados: NovoRegistro, conn?: DatabaseSync): Regist
   const result = c
     .prepare(
       `INSERT INTO registros_virtudes
-        (user_id, data_registro, criado_em, virtude, modalidade, emocao_atual, sintomas_atuais, descricao_acoes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        (user_id, user_name, user_email, data_registro, criado_em, virtude, modalidade, emocao_atual, sintomas_atuais, descricao_acoes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       dados.user_id,
+      dados.user_name ?? null,
+      dados.user_email ?? null,
       dados.data_registro,
       criadoEm,
       dados.virtude,

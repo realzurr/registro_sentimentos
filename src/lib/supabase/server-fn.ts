@@ -1,11 +1,9 @@
-import { createClient, type User } from "@supabase/supabase-js";
+import { createSupabaseServerClient } from "./server";
+import type { User } from "@supabase/supabase-js";
 
-export async function getUserFromToken(token: string): Promise<User | null> {
-  const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL!,
-    import.meta.env.VITE_SUPABASE_ANON_KEY!,
-    { global: { headers: { Authorization: `Bearer ${token}` } } },
-  );
-  const { data } = await supabase.auth.getUser();
+export async function getUserFromSession(): Promise<User | null> {
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error) return null;
   return data.user;
 }

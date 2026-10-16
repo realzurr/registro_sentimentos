@@ -15,4 +15,11 @@ test-results/
 playwright-report/
 blob-report/
 .DS_Store
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+*.pem
+*.key
+.vercel
+.netlify
 

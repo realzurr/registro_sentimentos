@@ -7,7 +7,7 @@ APP_NAME="agenda"
 APP_USER="deploy"
 APP_DIR="/home/${APP_USER}/agenda-virtudes"
 DATA_DIR="/var/lib/${APP_NAME}"
-PORT=3000
+PORT=5003
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -27,33 +27,29 @@ info "=== Iniciando deploy — ${APP_NAME} ==="
 cd "$APP_DIR"
 
 info "1/5 — Verificando dependências..."
-if ! command -v bun &>/dev/null; then
-  export PATH="/home/${APP_USER}/.bun/bin:$PATH"
-fi
-
-if ! command -v bun &>/dev/null; then
-  error "Bun não encontrado. Execute: curl -fsSL https://bun.sh/install | bash"
-fi
-
 if ! command -v node &>/dev/null; then
   error "Node.js não encontrado. Instale: apt install nodejs"
 fi
 
+if ! command -v npm &>/dev/null; then
+  error "npm não encontrado. Instale o Node.js (que inclui npm): apt install nodejs npm"
+fi
+
 NODE_MAJOR=$(node -v | cut -d. -f1 | tr -d v)
-if [[ $NODE_MAJOR -lt 20 ]]; then
-  error "Node.js 20+ necessário (atual: $(node -v))"
+if [[ $NODE_MAJOR -lt 22 ]]; then
+  error "Node.js 22+ necessário (atual: $(node -v)) — requisito do node:sqlite"
 fi
 
 info "2/5 — Instalando dependências..."
-bun install --frozen-lockfile 2>/dev/null || bun install
+npm install 2>/dev/null || npm install
 
 info "3/5 — Rodando verificações..."
-if bun run typecheck 2>&1 | grep -q "error"; then
+if npm run typecheck 2>&1 | grep -q "error"; then
   warn "Typecheck encontrou erros — continuando mesmo assim"
 fi
 
 info "4/5 — Build de produção..."
-bun run build
+npm run build
 
 if [[ ! -d .output ]]; then
   error "Build falhou — diretório .output não encontrado"

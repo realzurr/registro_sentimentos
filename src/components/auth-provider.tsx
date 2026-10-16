@@ -89,15 +89,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
-  const getToken: AuthContextValue["getToken"] = useCallback(async () => {
-    const supabase = clientRef.current;
-    if (!supabase) return null;
-    const { data } = await supabase.auth.getSession();
-    return data.session?.access_token ?? null;
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, getToken }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
